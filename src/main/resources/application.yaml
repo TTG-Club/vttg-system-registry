@@ -1,0 +1,65 @@
+spring:
+  application:
+    name: vttg-system-registry
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5434/vttg_systems}
+    username: ${DB_USERNAME:vttg_systems}
+    password: ${DB_PASSWORD:vttg_systems}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        default_batch_fetch_size: 50
+        jdbc:
+          time_zone: UTC
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+auth-service:
+  jwt-secret: ${AUTH_SERVICE_JWT_SECRET}
+
+# Где могут лежать системы: хосты открытых репозиториев (через запятую).
+# По умолчанию — только GitHub и GitLab; raw.githubusercontent.com нужен для
+# «сырых» файлов GitHub. Свой GitLab добавляется сюда же, например:
+# MANIFEST_ALLOWED_HOSTS=github.com,raw.githubusercontent.com,gitlab.com,git.example.org
+# Только https; адреса внутренних сетей не проходят независимо от списка.
+#
+# redirect-hosts — куда разрешённый хост может переадресовать загрузку
+# манифеста: ссылки вида …/releases/latest/download/system.json GitHub
+# отдаёт из хранилища ассетов. Как ссылку автора эти хосты указать нельзя.
+manifest:
+  allowed-hosts: ${MANIFEST_ALLOWED_HOSTS:github.com,raw.githubusercontent.com,gitlab.com}
+  redirect-hosts: ${MANIFEST_REDIRECT_HOSTS:objects.githubusercontent.com,release-assets.githubusercontent.com}
+  max-size: ${MANIFEST_MAX_SIZE:256KB}
+  timeout: ${MANIFEST_TIMEOUT:10s}
+  max-redirects: 3
+
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:https://new.ttg.club,https://ttg.club,https://dev.ttg.club}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+logbook:
+  format:
+    style: json
+  obfuscate:
+    headers:
+      - Authorization
+      - Cookie
+      - Set-Cookie
+  write:
+    max-body-size: 8192
+  exclude:
+    - /actuator/health
+    - /v3/api-docs/**
+    - /swagger-ui/**
